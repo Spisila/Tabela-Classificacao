@@ -1,0 +1,1 @@
+-- Campeonato de teste, como String
