@@ -11,6 +11,9 @@ data Erro
   | MesmoTime String
   | TimeRepetidoNaRodada Int Time
 
+removerQuebra :: String -> String
+removerQuebra s = filter (/= '\n') s
+
 separar :: Char -> String -> [String]
 separar c s = 
   let (palavra, resto) = break (== c) s
@@ -20,7 +23,8 @@ separar c s =
 
 -- lerPartida :: Int -> String -> Either Erro Partida
 
--- lerCampeonato :: String -> Either Erro [Partida]
+lerCampeonato :: String -> [[String]]
+lerCampeonato campeonato = map (separar ';') (separar '\n' campeonato)
 
 -- todosOsErros :: String -> [Erro]
 
