@@ -1,5 +1,7 @@
 -- Camada 1: tipos e consultas basicas
 
+module Tipos where 
+
 type Time = String
 
 data Resultado = Vitoria | Empate | Derrota
@@ -23,8 +25,8 @@ data Linha = Linha
   , golsContra :: Int
   } deriving (Show, Eq)
 
-participou :: Time -> Partida -> Bool
+-- participou :: Time -> Partida -> Bool
 
-resultadoPara :: Time -> Partida -> Maybe Resultado
+-- resultadoPara :: Time -> Partida -> Maybe Resultado
 
-times :: [Partida] -> [Time]
+-- times :: [Partida] -> [Time]

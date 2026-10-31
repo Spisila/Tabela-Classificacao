@@ -1,5 +1,7 @@
 -- Campeonato de teste, como String
 
+module Dados where
+
 -- Brasileirão Série A 2024 (Rodadas 1 a 5)
 dadosCampeonato :: String
 dadosCampeonato = unlines

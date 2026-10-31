@@ -1,5 +1,8 @@
 -- Camada 2: ordem superior
 
+module Classificacao where
+
+import Tipos
 
 pontos :: Resultado -> Int
 
