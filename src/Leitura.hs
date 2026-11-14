@@ -3,7 +3,7 @@
 module Leitura where
 
 import Data.Char (isSpace)
-import Data.List (groupBy, sortOn)
+import Data.List (groupBy, intercalate, sortOn)
 import Data.Maybe (mapMaybe)
 import Text.Read (readMaybe)
 import Tipos
@@ -86,4 +86,20 @@ todosOsErros texto =
                   Just (TimeRepetidoNaRodada rodadaAtual nome)
             _ -> Nothing
 
--- tabelaFormatada :: [Linha] -> String
+tabelaFormatada :: [Linha] -> String
+tabelaFormatada linhas =
+  unlines (cabecalho : map formatarLinha (zip ([1..] :: [Int]) linhas))
+  where
+    cabecalho = intercalate " | "
+      ["Pos", "Time", "P", "J", "V", "E", "D", "SG"]
+
+    formatarLinha (posicao, linha) = intercalate " | "
+      [ show posicao
+      , time linha
+      , show (3 * vitorias linha + empates linha)
+      , show (jogos linha)
+      , show (vitorias linha)
+      , show (empates linha)
+      , show (derrotas linha)
+      , show (golsPro linha - golsContra linha)
+      ]
