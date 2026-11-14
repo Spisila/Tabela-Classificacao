@@ -3,6 +3,8 @@
 module Leitura where
 
 import Data.Char (isSpace)
+import Data.List (groupBy, sortOn)
+import Data.Maybe (mapMaybe)
 import Text.Read (readMaybe)
 import Tipos
 
@@ -27,7 +29,7 @@ separar char string =
 lerPartida :: Int -> String -> Either Erro Partida
 lerPartida numeroLinha texto =
   let linha = removerQuebra texto
-      campos = map limpar (separar ';' linha)
+      campos = map removerEspacos (separar ';' linha)
       contexto = "linha " ++ show numeroLinha ++ ": " ++ linha
   in case campos of
     [rodadaTexto, mandanteTexto, golsMandanteTexto,
@@ -44,16 +46,44 @@ lerPartida numeroLinha texto =
                     golsMandanteAtual golsVisitanteAtual visitanteTexto)
     _ -> Left (CamposInvalidos contexto)
   where
-    limpar = reverse . dropWhile isSpace . reverse . dropWhile isSpace
-
     lerNumero linha campo =
       case readMaybe campo of
         Just valor -> Right valor
         Nothing -> Left (NumeroInvalido linha)
 
+removerEspacos :: String -> String
+removerEspacos = reverse . dropWhile isSpace . reverse . dropWhile isSpace
+
 lerCampeonato :: String -> [[String]]
 lerCampeonato campeonato = map (separar ';') (separar '\n' campeonato)
 
--- todosOsErros :: String -> [Erro]
+todosOsErros :: String -> [Erro]
+todosOsErros texto =
+  let linhas = filter (not . ignorar) (zip [1..] (lines texto))
+      resultados = map (uncurry lerPartida) linhas
+      errosDeLeitura = [erro | Left erro <- resultados]
+      partidasValidas = [partida | Right partida <- resultados]
+  in errosDeLeitura ++ errosDeRepeticao partidasValidas
+  where
+    ignorar (_, linha) =
+      let limpa = removerEspacos linha
+      in null limpa || head limpa == '#'
+
+    errosDeRepeticao partidas =
+      mapMaybe erroDeGrupo grupos
+      where
+        ocorrencias = sortOn id
+          [ (rodada partida, nome)
+          | partida <- partidas
+          , nome <- [mandante partida, visitante partida]
+          ]
+        grupos = groupBy (==) ocorrencias
+
+        erroDeGrupo grupo =
+          case grupo of
+            ((rodadaAtual, nome):_) 
+              | length grupo > 1 ->
+                  Just (TimeRepetidoNaRodada rodadaAtual nome)
+            _ -> Nothing
 
 -- tabelaFormatada :: [Linha] -> String
