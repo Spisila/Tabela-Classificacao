@@ -3,14 +3,14 @@
 module Dados where
 
 -- Brasileirão Série A 2024 (Rodadas 1 a 5)
-dadosCampeonato :: String''
+dadosCampeonato :: String
 dadosCampeonato = unlines
   [
     "1;Criciuma;1;1;Juventude"
   , "1;Fluminense;2;2;Red Bull Bragantino"
   , "1;Sao Paulo;1;2;Fortaleza"
   , "1;Atletico-GO;1;2;Flamengo"
-  , "1;Vasco;2;1;Gremio"'
+  , "1;Vasco;2;1;Gremio"
   , "1;Corinthians;0;0;Atletico-MG"
   , "1;Athletico-PR;4;0;Cuiaba"
   , "1;Cruzeiro;3;2;Botafogo"
