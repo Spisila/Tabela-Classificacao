@@ -4,20 +4,20 @@ module Classificacao where
 
 import Tipos
 
-pontos :: Resultado -> Int
+-- pontos :: Resultado -> Int
 
-linhaDoTime :: [Partida] -> Time -> Linha
+-- linhaDoTime :: [Partida] -> Time -> Linha
 
-pontosLinha :: Linha -> Int
+-- pontosLinha :: Linha -> Int
 
-saldo :: Linha -> Int
+-- saldo :: Linha -> Int
 
-aproveitamento :: Linha -> Double
+-- aproveitamento :: Linha -> Double
 
-classificacao :: [Partida] -> [Linha]
+-- classificacao :: [Partida] -> [Linha]
 
-ateRodada :: Int -> [Partida] -> [Partida]
+-- ateRodada :: Int -> [Partida] -> [Partida]
 
-maiorGoleada :: [Partida] -> Maybe Partida
+-- maiorGoleada :: [Partida] -> Maybe Partida
 
-mediaGols :: [Partida] -> Maybe Double
+-- mediaGols :: [Partida] -> Maybe Double
