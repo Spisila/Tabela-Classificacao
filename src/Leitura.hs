@@ -32,8 +32,7 @@ lerPartida numeroLinha texto =
       campos = map removerEspacos (separar ';' linha)
       contexto = "linha " ++ show numeroLinha ++ ": " ++ linha
   in case campos of
-    [rodadaTexto, mandanteTexto, golsMandanteTexto,
-      golsVisitanteTexto, visitanteTexto]
+    [rodadaTexto, mandanteTexto, golsMandanteTexto, golsVisitanteTexto, visitanteTexto]
         | any null campos -> Left (CamposInvalidos contexto)
         | mandanteTexto == visitanteTexto -> Left (MesmoTime contexto)
         | otherwise -> do
@@ -54,37 +53,47 @@ lerPartida numeroLinha texto =
 removerEspacos :: String -> String
 removerEspacos = reverse . dropWhile isSpace . reverse . dropWhile isSpace
 
-lerCampeonato :: String -> [[String]]
-lerCampeonato campeonato = map (separar ';') (separar '\n' campeonato)
+lerCampeonato :: String -> Either Erro [Partida]
+lerCampeonato texto = do
+  partidas <- traverse (uncurry lerPartida) (linhasDeEntrada texto)
+  case errosDeRepeticao partidas of
+    []       -> Right partidas
+    erro : _ -> Left erro
 
 todosOsErros :: String -> [Erro]
 todosOsErros texto =
-  let linhas = filter (not . ignorar) (zip [1..] (lines texto))
-      resultados = map (uncurry lerPartida) linhas
+  let resultados = map (uncurry lerPartida) (linhasDeEntrada texto)
       errosDeLeitura = [erro | Left erro <- resultados]
       partidasValidas = [partida | Right partida <- resultados]
   in errosDeLeitura ++ errosDeRepeticao partidasValidas
+
+linhasDeEntrada :: String -> [(Int, String)]
+linhasDeEntrada texto =
+  filter (not . ignorarLinha) (zip ([1..] :: [Int]) (lines texto))
+
+ignorarLinha :: (Int, String) -> Bool
+ignorarLinha (_, linha) =
+  case removerEspacos linha of
+    []     -> True
+    '#':_  -> True
+    _      -> False
+
+errosDeRepeticao :: [Partida] -> [Erro]
+errosDeRepeticao partidas = mapMaybe erroDeGrupo grupos
   where
-    ignorar (_, linha) =
-      let limpa = removerEspacos linha
-      in null limpa || head limpa == '#'
+    ocorrencias = sortOn id
+      [ (rodada partida, nome)
+      | partida <- partidas
+      , nome <- [mandante partida, visitante partida]
+      ]
+    grupos = groupBy (==) ocorrencias
 
-    errosDeRepeticao partidas =
-      mapMaybe erroDeGrupo grupos
-      where
-        ocorrencias = sortOn id
-          [ (rodada partida, nome)
-          | partida <- partidas
-          , nome <- [mandante partida, visitante partida]
-          ]
-        grupos = groupBy (==) ocorrencias
-
-        erroDeGrupo grupo =
-          case grupo of
-            ((rodadaAtual, nome):_) 
-              | length grupo > 1 ->
-                  Just (TimeRepetidoNaRodada rodadaAtual nome)
-            _ -> Nothing
+    erroDeGrupo grupo =
+      case grupo of
+        ((rodadaAtual, nome):_)
+          | length grupo > 1 ->
+              Just (TimeRepetidoNaRodada rodadaAtual nome)
+        _ -> Nothing
 
 tabelaFormatada :: [Linha] -> String
 tabelaFormatada linhas =
