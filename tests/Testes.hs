@@ -49,6 +49,10 @@ erroEh predicado resultado =
 
 testesCamada1 :: IO ()
 testesCamada1 = do
+  testar "campeonato vazio como texto"
+    (lerCampeonato "") (Right [])
+  testar "campeonato vazio com comentario"
+    (lerCampeonato "# só comentário\n\n") (Right [])
   testar "resultado do mandante"
     (resultadoPara "Time A" partidaTeste) (Just Vitoria)
   testar "resultado do visitante"
@@ -70,6 +74,22 @@ testesCamada2 = do
       ateTerceira = classificacao (ateRodada 3 partidasDoCampeonato)
       linhaSemJogos = Linha "Time C" 0 0 0 0 0 0
       linhaComResultados = Linha "Time A" 3 1 1 1 5 3
+  testar "media de gols do campeonato real"
+    (mediaGols partidasDoCampeonato) (Just 2.3)
+  -- Empate em diferença 4: as três partidas são Athletico-PR 4x0 Cuiaba,
+  -- Botafogo 5x1 Juventude e Vasco 0x4 Criciuma. Nesta lista de partidas,
+  -- sortBy preserva a primeira como vencedor do empate.
+  testar "maior goleada do campeonato real"
+    (maiorGoleada partidasDoCampeonato)
+    (Just (Partida 1 "Athletico-PR" 4 0 "Cuiaba"))
+  testar "linha do Athletico-PR no campeonato completo"
+    (linhaDoTime partidasDoCampeonato "Athletico-PR")
+    (Linha "Athletico-PR" 5 3 1 1 7 3)
+  testar "linha do time em lista vazia"
+    (linhaDoTime [] "Qualquer")
+    (Linha "Qualquer" 0 0 0 0 0 0)
+  testar "classificacao de campeonato vazio"
+    (classificacao []) []
   testar "pontos para vitoria"
     (pontos Vitoria) 3
   testar "pontos para empate"
@@ -100,7 +120,16 @@ testesCamada2 = do
 
 testesCamada3 :: IO ()
 testesCamada3 = do
-  let entradaComErros = unlines
+  let linhasManuais =
+        [ Linha "Alpha" 2 1 1 0 3 1
+        , Linha "Beta" 2 0 1 1 2 4
+        ]
+      tabelaManuaisEsperada =
+        "Pos  Time   P  J  V  E  D  SG\n" ++
+        "---  -----  -  -  -  -  -  --\n" ++
+        "  1  Alpha  4  2  1  1  0   2\n" ++
+        "  2  Beta   1  2  0  1  1  -2\n"
+      entradaComErros = unlines
         [ "1;Time A;dois;0;Time B"
         , "2;Time C;-1;0;Time D"
         , "3;Time E;1;1;Time E"
@@ -108,6 +137,18 @@ testesCamada3 = do
         , "5;Time G;1;0;Time H"
         , "5;Time I;2;0;Time G"
         ]
+  testar "separar com tres campos"
+    (separar ';' "a;b;c") ["a","b","c"]
+  testar "separar texto vazio"
+    (separar ';' "") [""]
+  testar "separar campos vazios internos"
+    (separar ';' "a;;b") ["a","","b"]
+  testar "tabela vazia contem somente cabecalho e divisoria"
+    (tabelaFormatada [])
+    ("Pos  Time  P  J  V  E  D  SG\n" ++
+     "---  ----  -  -  -  -  -  --\n")
+  testar "tabela formatada com duas linhas"
+    (tabelaFormatada linhasManuais) tabelaManuaisEsperada
   testar "numero invalido"
     (erroEh numeroInvalido (lerPartida 1 "1;Time A;dois;0;Time B")) True
   testar "placar negativo"
