@@ -6,6 +6,7 @@ import Data.Char (isSpace)
 import Data.List (groupBy, intercalate, sortOn)
 import Data.Maybe (mapMaybe)
 import Text.Read (readMaybe)
+import Classificacao (pontosLinha, saldo)
 import Tipos
 
 data Erro
@@ -101,12 +102,12 @@ tabelaFormatada linhas =
   where
     larguraPosicao = max (length "Pos") (length (show (length linhas)))
     larguraTime = maximum (length "Time" : map (length . time) linhas)
-    larguraPontos = maximum (length "P" : map (length . show . pontosDaLinha) linhas)
+    larguraPontos = maximum (length "P" : map (length . show . pontosLinha) linhas)
     larguraJogos = maximum (length "J" : map (length . show . jogos) linhas)
     larguraVitorias = maximum (length "V" : map (length . show . vitorias) linhas)
     larguraEmpates = maximum (length "E" : map (length . show . empates) linhas)
     larguraDerrotas = maximum (length "D" : map (length . show . derrotas) linhas)
-    larguraSaldo = maximum (length "SG" : map (length . show . saldoDaLinha) linhas)
+    larguraSaldo = maximum (length "SG" : map (length . show . saldo) linhas)
 
     cabecalho = intercalate "  "
       [ alinharDireita larguraPosicao "Pos"
@@ -133,16 +134,13 @@ tabelaFormatada linhas =
     formatarLinha (posicao, linha) = intercalate "  "
       [ alinharDireita larguraPosicao (show posicao)
       , alinharEsquerda larguraTime (time linha)
-      , alinharDireita larguraPontos (show (pontosDaLinha linha))
+      , alinharDireita larguraPontos (show (pontosLinha linha))
       , alinharDireita larguraJogos (show (jogos linha))
       , alinharDireita larguraVitorias (show (vitorias linha))
       , alinharDireita larguraEmpates (show (empates linha))
       , alinharDireita larguraDerrotas (show (derrotas linha))
-      , alinharDireita larguraSaldo (show (saldoDaLinha linha))
+      , alinharDireita larguraSaldo (show (saldo linha))
       ]
-
-    pontosDaLinha linha = 3 * vitorias linha + empates linha
-    saldoDaLinha linha = golsPro linha - golsContra linha
 
     alinharEsquerda largura texto =
       texto ++ replicate (largura - length texto) ' '

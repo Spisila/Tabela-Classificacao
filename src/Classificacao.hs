@@ -37,7 +37,10 @@ linhaDoTime :: [Partida] -> Time -> Linha
 linhaDoTime ps t = foldl (acumular t) (Linha t 0 0 0 0 0 0) (filter (participou t) ps)
 
 pontosLinha :: Linha -> Int
-pontosLinha l = 3 * vitorias l + empates l
+pontosLinha l =
+  pontos Vitoria * vitorias l
+  + pontos Empate * empates l
+  + pontos Derrota * derrotas l
 
 saldo :: Linha -> Int
 saldo l = golsPro l - golsContra l
