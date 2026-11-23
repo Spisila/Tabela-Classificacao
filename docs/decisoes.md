@@ -35,6 +35,11 @@
 
   `Down` foi usado nos criterios em que valores maiores devem aparecer
   antes. O nome do time foi usado apenas como desempate final deterministico.
+- Quando dois times empatam em pontos, vitorias, saldo e gols pro, a ordem
+  e decidida pelo nome em ordem alfabetica, apenas para tornar a tabela
+  deterministica; esse criterio nao e oficial do campeonato. Por exemplo,
+  Atletico-MG e Criciuma terminam com 9 pontos, 2 vitorias, saldo 5 e 8 gols
+  pro; Atletico-MG fica na frente apenas pelo nome.
 - `ateRodada` usa `filter`, permitindo reutilizar todas as funcoes de
   classificacao com os dados de uma rodada intermediaria.
 - `maiorGoleada` e `mediaGols` devolvem `Maybe`, pois uma lista vazia nao
@@ -75,5 +80,6 @@
   de linha de comando.
 - Rodadas negativas nao sao consideradas explicitamente invalidas por
   `lerPartida`; elas podem entrar como valores numericos validos.
-- O desempate por confronto direto nao foi implementado. Os criterios
-  definidos foram pontos, vitorias, saldo, gols pro e nome do time.
+- Confronto direto, cartoes e outros criterios oficiais nao foram
+  implementados. Os criterios definidos foram pontos, vitorias, saldo,
+  gols pro e nome do time.
