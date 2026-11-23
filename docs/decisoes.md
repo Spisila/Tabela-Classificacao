@@ -16,9 +16,10 @@
 
 ## Camada 2
 
-- `linhaDoTime` usa `foldl` para acumular jogos, resultados e gols em uma
-  unica `Linha`. A lista de partidas do time ja foi filtrada antes da dobra,
-  evitando processar partidas nas quais ele nao participou.
+- `linhaDoTime` usa `foldl` da esquerda para a direita sobre as partidas ja
+  filtradas, acumulando jogos, resultados e gols em uma unica `Linha`. Como
+  por time existem poucas partidas, nao ha problema relevante de laziness, e
+  essa ordem mantem a leitura cronologica das partidas.
 - Os pontos sao calculados separadamente por `pontosLinha`. Uma vitoria vale
   tres pontos e um empate vale um ponto.
 - O aproveitamento usa a quantidade de pontos conquistados dividida pelos
@@ -61,9 +62,10 @@
 
 - Mantivemos os modulos separados por camada para que tipos, calculos,
   entrada e demonstracao possam ser testados independentemente.
-- Os dados do campeonato ficam em `dadosCampeonato`, em `Dados.hs`, pois isso
-  permite executar o projeto no GHC local e no playground sem entrada pelo
-  teclado.
+- O ambiente escolhido para executar o projeto e o GHC local, instalado via
+  GHCup. Os modulos ficam separados em `src/`.
+- Os dados do campeonato ficam em `dadosCampeonato`, em `Dados.hs`, como uma
+  `String`, para nao depender de entrada pelo teclado.
 - O `main` apenas coordena a demonstracao e depende de funcoes puras para
   obter a classificacao e os erros.
 

@@ -12,7 +12,6 @@ a partir dos resultados de suas partidas.
 - `src/Main.hs`: demonstração do programa.
 - `tests/Testes.hs`: testes das três camadas.
 - `docs/decisoes.md`: decisões de modelagem.
-- `extra/enunciado.md`: especificação completa do trabalho.
 
 ## Ambiente
 
