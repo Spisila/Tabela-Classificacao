@@ -97,18 +97,55 @@ errosDeRepeticao partidas = mapMaybe erroDeGrupo grupos
 
 tabelaFormatada :: [Linha] -> String
 tabelaFormatada linhas =
-  unlines (cabecalho : map formatarLinha (zip ([1..] :: [Int]) linhas))
+  unlines (cabecalho : divisoria : map formatarLinha (zip ([1..] :: [Int]) linhas))
   where
-    cabecalho = intercalate " | "
-      ["Pos", "Time", "P", "J", "V", "E", "D", "SG"]
+    larguraPosicao = max (length "Pos") (length (show (length linhas)))
+    larguraTime = maximum (length "Time" : map (length . time) linhas)
+    larguraPontos = maximum (length "P" : map (length . show . pontosDaLinha) linhas)
+    larguraJogos = maximum (length "J" : map (length . show . jogos) linhas)
+    larguraVitorias = maximum (length "V" : map (length . show . vitorias) linhas)
+    larguraEmpates = maximum (length "E" : map (length . show . empates) linhas)
+    larguraDerrotas = maximum (length "D" : map (length . show . derrotas) linhas)
+    larguraSaldo = maximum (length "SG" : map (length . show . saldoDaLinha) linhas)
 
-    formatarLinha (posicao, linha) = intercalate " | "
-      [ show posicao
-      , time linha
-      , show (3 * vitorias linha + empates linha)
-      , show (jogos linha)
-      , show (vitorias linha)
-      , show (empates linha)
-      , show (derrotas linha)
-      , show (golsPro linha - golsContra linha)
+    cabecalho = intercalate "  "
+      [ alinharDireita larguraPosicao "Pos"
+      , alinharEsquerda larguraTime "Time"
+      , alinharDireita larguraPontos "P"
+      , alinharDireita larguraJogos "J"
+      , alinharDireita larguraVitorias "V"
+      , alinharDireita larguraEmpates "E"
+      , alinharDireita larguraDerrotas "D"
+      , alinharDireita larguraSaldo "SG"
       ]
+
+    divisoria = intercalate "  "
+      [ replicate larguraPosicao '-'
+      , replicate larguraTime '-'
+      , replicate larguraPontos '-'
+      , replicate larguraJogos '-'
+      , replicate larguraVitorias '-'
+      , replicate larguraEmpates '-'
+      , replicate larguraDerrotas '-'
+      , replicate larguraSaldo '-'
+      ]
+
+    formatarLinha (posicao, linha) = intercalate "  "
+      [ alinharDireita larguraPosicao (show posicao)
+      , alinharEsquerda larguraTime (time linha)
+      , alinharDireita larguraPontos (show (pontosDaLinha linha))
+      , alinharDireita larguraJogos (show (jogos linha))
+      , alinharDireita larguraVitorias (show (vitorias linha))
+      , alinharDireita larguraEmpates (show (empates linha))
+      , alinharDireita larguraDerrotas (show (derrotas linha))
+      , alinharDireita larguraSaldo (show (saldoDaLinha linha))
+      ]
+
+    pontosDaLinha linha = 3 * vitorias linha + empates linha
+    saldoDaLinha linha = golsPro linha - golsContra linha
+
+    alinharEsquerda largura texto =
+      texto ++ replicate (largura - length texto) ' '
+
+    alinharDireita largura texto =
+      replicate (largura - length texto) ' ' ++ texto
