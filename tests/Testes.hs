@@ -68,6 +68,22 @@ testesCamada2 :: IO ()
 testesCamada2 = do
   let final = classificacao partidasDoCampeonato
       ateTerceira = classificacao (ateRodada 3 partidasDoCampeonato)
+      linhaSemJogos = Linha "Time C" 0 0 0 0 0 0
+      linhaComResultados = Linha "Time A" 3 1 1 1 5 3
+  testar "pontos para vitoria"
+    (pontos Vitoria) 3
+  testar "pontos para empate"
+    (pontos Empate) 1
+  testar "pontos para derrota"
+    (pontos Derrota) 0
+  testar "pontos da linha"
+    (pontosLinha linhaComResultados) 4
+  testar "saldo de gols da linha"
+    (saldo linhaComResultados) 2
+  testar "aproveitamento da linha"
+    (aproveitamento linhaComResultados) (400 / 9)
+  testar "aproveitamento sem jogos"
+    (aproveitamento linhaSemJogos) 0
   testar "classificacao final completa"
     (map time final) nomesClassificacaoFinal
   testar "classificacao ate a terceira rodada"
