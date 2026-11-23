@@ -60,6 +60,12 @@ runghc -isrc src/Main.hs
 runghc -isrc tests/Testes.hs
 ```
 
+Para abrir o programa no GHCi:
+
+```text
+ghci -isrc src/Main.hs
+```
+
 ## O que o programa demonstra
 
 - Tabela completa do campeonato.
