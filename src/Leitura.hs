@@ -47,9 +47,7 @@ lerPartida numeroLinha texto =
     _ -> Left (CamposInvalidos contexto)
   where
     lerNumero linha campo =
-      case readMaybe campo of
-        Just valor -> Right valor
-        Nothing -> Left (NumeroInvalido linha)
+      maybe (Left (NumeroInvalido linha)) Right (readMaybe campo)
 
 removerEspacos :: String -> String
 removerEspacos = reverse . dropWhile isSpace . reverse . dropWhile isSpace
