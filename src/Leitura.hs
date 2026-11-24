@@ -3,7 +3,7 @@
 module Leitura where
 
 import Data.Char (isSpace)
-import Data.List (groupBy, intercalate, sortOn)
+import Data.List (groupBy, intercalate, sort)
 import Data.Maybe (mapMaybe)
 import Text.Read (readMaybe)
 import Classificacao (pontosLinha, saldo)
@@ -16,6 +16,33 @@ data Erro
   | MesmoTime String
   | TimeRepetidoNaRodada Int Time
   deriving (Show, Eq)
+
+data Alinhamento = Esquerda | Direita
+
+type Coluna = (String, Alinhamento, Linha -> String)
+
+alinharEsquerda :: Int -> String -> String
+alinharEsquerda largura texto =
+  texto ++ replicate (largura - length texto) ' '
+
+alinharDireita :: Int -> String -> String
+alinharDireita largura texto =
+  replicate (largura - length texto) ' ' ++ texto
+
+alinhar :: Alinhamento -> Int -> String -> String
+alinhar Esquerda = alinharEsquerda
+alinhar Direita = alinharDireita
+
+colunasTabela :: [Coluna]
+colunasTabela =
+  [ ("Time", Esquerda, time)
+  , ("P", Direita, show . pontosLinha)
+  , ("J", Direita, show . jogos)
+  , ("V", Direita, show . vitorias)
+  , ("E", Direita, show . empates)
+  , ("D", Direita, show . derrotas)
+  , ("SG", Direita, show . saldo)
+  ]
 
 removerQuebra :: String -> String
 removerQuebra s = filter (/= '\n') s
@@ -80,7 +107,7 @@ ignorarLinha (_, linha) =
 errosDeRepeticao :: [Partida] -> [Erro]
 errosDeRepeticao partidas = mapMaybe erroDeGrupo grupos
   where
-    ocorrencias = sortOn id
+    ocorrencias = sort
       [ (rodada partida, nome)
       | partida <- partidas
       , nome <- [mandante partida, visitante partida]
@@ -96,52 +123,44 @@ errosDeRepeticao partidas = mapMaybe erroDeGrupo grupos
 
 tabelaFormatada :: [Linha] -> String
 tabelaFormatada linhas =
-  unlines (cabecalho : divisoria : map formatarLinha (zip ([1..] :: [Int]) linhas))
+  unlines
+    (cabecalhoTabela larguras : divisoriaTabela larguras :
+     map (formatarLinhaTabela larguras) (zip ([1..] :: [Int]) linhas))
+  where
+    larguras = largurasTabela linhas
+
+largurasTabela :: [Linha] -> (Int, [Int])
+largurasTabela linhas =
+  (larguraPosicao, map (larguraColuna linhas) colunasTabela)
   where
     larguraPosicao = max (length "Pos") (length (show (length linhas)))
-    larguraTime = maximum (length "Time" : map (length . time) linhas)
-    larguraPontos = maximum (length "P" : map (length . show . pontosLinha) linhas)
-    larguraJogos = maximum (length "J" : map (length . show . jogos) linhas)
-    larguraVitorias = maximum (length "V" : map (length . show . vitorias) linhas)
-    larguraEmpates = maximum (length "E" : map (length . show . empates) linhas)
-    larguraDerrotas = maximum (length "D" : map (length . show . derrotas) linhas)
-    larguraSaldo = maximum (length "SG" : map (length . show . saldo) linhas)
 
-    cabecalho = intercalate "  "
-      [ alinharDireita larguraPosicao "Pos"
-      , alinharEsquerda larguraTime "Time"
-      , alinharDireita larguraPontos "P"
-      , alinharDireita larguraJogos "J"
-      , alinharDireita larguraVitorias "V"
-      , alinharDireita larguraEmpates "E"
-      , alinharDireita larguraDerrotas "D"
-      , alinharDireita larguraSaldo "SG"
-      ]
+larguraColuna :: [Linha] -> Coluna -> Int
+larguraColuna linhas (cabecalho, _, extrair) =
+  maximum (length cabecalho : map (length . extrair) linhas)
 
-    divisoria = intercalate "  "
-      [ replicate larguraPosicao '-'
-      , replicate larguraTime '-'
-      , replicate larguraPontos '-'
-      , replicate larguraJogos '-'
-      , replicate larguraVitorias '-'
-      , replicate larguraEmpates '-'
-      , replicate larguraDerrotas '-'
-      , replicate larguraSaldo '-'
-      ]
+cabecalhoTabela :: (Int, [Int]) -> String
+cabecalhoTabela (larguraPosicao, larguras) =
+  intercalate "  "
+    (alinharDireita larguraPosicao "Pos" :
+     zipWith formatoCabecalho larguras colunasTabela)
 
-    formatarLinha (posicao, linha) = intercalate "  "
-      [ alinharDireita larguraPosicao (show posicao)
-      , alinharEsquerda larguraTime (time linha)
-      , alinharDireita larguraPontos (show (pontosLinha linha))
-      , alinharDireita larguraJogos (show (jogos linha))
-      , alinharDireita larguraVitorias (show (vitorias linha))
-      , alinharDireita larguraEmpates (show (empates linha))
-      , alinharDireita larguraDerrotas (show (derrotas linha))
-      , alinharDireita larguraSaldo (show (saldo linha))
-      ]
+formatoCabecalho :: Int -> Coluna -> String
+formatoCabecalho largura (cabecalho, alinhamento, _) =
+  alinhar alinhamento largura cabecalho
 
-    alinharEsquerda largura texto =
-      texto ++ replicate (largura - length texto) ' '
+divisoriaTabela :: (Int, [Int]) -> String
+divisoriaTabela (larguraPosicao, larguras) =
+  intercalate "  "
+    (replicate larguraPosicao '-' :
+     map (`replicate` '-') larguras)
 
-    alinharDireita largura texto =
-      replicate (largura - length texto) ' ' ++ texto
+formatarLinhaTabela :: (Int, [Int]) -> (Int, Linha) -> String
+formatarLinhaTabela (larguraPosicao, larguras) (posicao, linha) =
+  intercalate "  "
+    (alinharDireita larguraPosicao (show posicao) :
+     zipWith (formatoLinha linha) larguras colunasTabela)
+
+formatoLinha :: Linha -> Int -> Coluna -> String
+formatoLinha linha largura (_, alinhamento, extrair) =
+  alinhar alinhamento largura (extrair linha)

@@ -48,7 +48,7 @@ saldo l = golsPro l - golsContra l
 aproveitamento :: Linha -> Double
 aproveitamento l
   | jogos l == 0 = 0
-  | otherwise    = 100 * fromIntegral (pontosLinha l) / fromIntegral (3 * jogos l)
+  | otherwise    = 100 * fromIntegral (pontosLinha l) / fromIntegral (pontos Vitoria * jogos l)
 
 criterio :: Linha -> Linha -> Ordering
 criterio = comparing (Down . pontosLinha)
