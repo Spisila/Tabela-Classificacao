@@ -13,6 +13,14 @@
   representacao especial para indicar que o time nao participou.
 - `times` utiliza `nub` e `sort` para remover repeticoes e apresentar os nomes
   em ordem alfabetica.
+- Os tipos fechados dificultam estados invalidos: `Resultado` limita o
+  resultado a `Vitoria`, `Empate` ou `Derrota`, e nao aceita representacoes
+  soltas como String ou Int. `Partida` e `Linha` usam records, o que mantem
+  nomes associados aos campos e evita trocar mandante e visitante sem
+  perceber. Uma `Partida` criada por `lerCampeonato` ja passou pelas
+  validacoes de campos vazios, placar negativo, time contra si mesmo e time
+  repetido na rodada. Ainda assim, quem monta uma `Partida` diretamente pode
+  criar um placar negativo, pois o construtor nao impede isso.
 
 ## Camada 2
 
@@ -63,6 +71,25 @@
 - Os erros carregam a linha ou a rodada correspondente, tornando as mensagens
   mais uteis e facilitando a localizacao do problema.
 
+## Casos de borda e armadilhas do enunciado
+
+| Armadilha | Como foi evitada | Onde/teste |
+|---|---|---|
+| Tupla em vez de record | `Partida` e `Linha` usam records com campos nomeados | Camada 1 em `Tipos.hs` |
+| `Resultado` como String ou Int | Foi usado o tipo soma `Resultado` com tres construtores fechados | `resultadoPara` e testes "resultado do mandante", "resultado do visitante" |
+| `head`, `maximum` ou `foldr1` em lista vazia | `maiorGoleada` e `mediaGols` usam `Maybe`; os `maximum` de `tabelaFormatada` comecam pelo comprimento do cabecalho, portanto a lista nunca fica vazia | Testes "maior goleada em lista vazia", "media de gols em lista vazia", "tabela vazia contem somente cabecalho e divisoria" |
+| `div` ou `Int` com `/` | O aproveitamento converte os pontos e jogos com `fromIntegral` antes da divisao | Teste "aproveitamento da linha" |
+| Ordenar apenas por pontos ou encadear varios `sortBy` | A comparacao usa um unico `criterio` encadeado com `comparing`, `Down` e `<>` | Testes "desempate por saldo Athletico-PR Bahia Cruzeiro", "desempate por vitorias Botafogo Atletico-MG", "desempate por gols pro criterio Linha A Linha B" |
+| Recursao explicita na Camada 2 | `map`, `filter`, `foldl`, `sortBy` e `sum` substituem recursao explicita | `linhaDoTime`, `classificacao`, `ateRodada` e as propriedades da Camada 2 |
+| `read` em vez de `readMaybe` | As conversoes usam `readMaybe`; `maybe` converte `Nothing` em `NumeroInvalido` | Testes "numero invalido", "ler partida com espacos", "todos os erros conta comentarios e linhas vazias" |
+| Cases aninhados em `Either` | `lerPartida` usa `do` em `Either`; `lerCampeonato` usa `traverse` | Testes "campos invalidos", "mesmo time", "placar negativo", "time repetido na rodada" |
+| `getLine` no `main` | Os dados ficam em `dadosCampeonato`, como String; o `main` nao faz entrada pelo teclado | Testes "campeonato vazio como texto", "ler campeonato ignora comentario e linha vazia" |
+| Campeonato vazio | `lerCampeonato ""` retorna `Right []`, `classificacao []` retorna `[]` e a tabela vazia mostra apenas cabecalho e divisoria | Testes "campeonato vazio como texto", "campeonato vazio com comentario", "classificacao de campeonato vazio", "tabela vazia contem somente cabecalho e divisoria" |
+
+Observacao: `main` em `src/Main.hs` e a unica funcao com `IO` no codigo do
+programa. O modulo `tests/Testes.hs` usa `IO` apenas porque executa e imprime
+os resultados dos testes.
+
 ## Decisoes gerais
 
 - Mantivemos os modulos separados por camada para que tipos, calculos,
@@ -83,3 +110,10 @@
 - Confronto direto, cartoes e outros criterios oficiais nao foram
   implementados. Os criterios definidos foram pontos, vitorias, saldo,
   gols pro e nome do time.
+- Os nomes de time diferenciam maiusculas e minusculas. Espacos internos nos
+  nomes nao sao normalizados.
+- Rodadas nao precisam ser consecutivas e o programa nao verifica se o
+  calendario esta completo.
+- O aproveitamento e retornado como `Double`, sem arredondamento.
+- Os dados de teste nao usam acentos para evitar problemas de codificacao no
+  console do Windows.
