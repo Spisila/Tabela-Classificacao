@@ -4,6 +4,8 @@ module Main where
 
 import Classificacao
 import Dados
+import Data.Either (fromRight)
+import Data.List (nub)
 import Leitura
 import Tipos
 
@@ -18,10 +20,7 @@ partidaTeste :: Partida
 partidaTeste = Partida 1 "Time A" 2 1 "Time B"
 
 partidasDoCampeonato :: [Partida]
-partidasDoCampeonato =
-  case lerCampeonato dadosCampeonato of
-    Right partidas -> partidas
-    Left erro -> error ("Dados de teste invalidos: " ++ show erro)
+partidasDoCampeonato = fromRight [] (lerCampeonato dadosCampeonato)
 
 nomesClassificacaoFinal :: [Time]
 nomesClassificacaoFinal =
@@ -53,6 +52,18 @@ testesCamada1 = do
     (lerCampeonato "") (Right [])
   testar "campeonato vazio com comentario"
     (lerCampeonato "# só comentário\n\n") (Right [])
+  testar "campeonato real tem pelo menos seis times"
+    (length (times partidasDoCampeonato) >= 6) True
+  testar "campeonato real tem pelo menos cinco rodadas"
+    (length (nub (map rodada partidasDoCampeonato)) >= 5) True
+  testar "campeonato real tem partida empatada em zero"
+    (any (\p -> golsMandante p == 0 && golsVisitante p == 0)
+      partidasDoCampeonato)
+    True
+  testar "campeonato real tem partida por tres gols ou mais"
+    (any ((>= 3) . diferenca) partidasDoCampeonato) True
+  testar "campeonato real nao repete times na rodada"
+    (lerCampeonato dadosCampeonato) (Right partidasDoCampeonato)
   testar "resultado do mandante"
     (resultadoPara "Time A" partidaTeste) (Just Vitoria)
   testar "resultado do visitante"
@@ -74,6 +85,37 @@ testesCamada2 = do
       ateTerceira = classificacao (ateRodada 3 partidasDoCampeonato)
       linhaSemJogos = Linha "Time C" 0 0 0 0 0 0
       linhaComResultados = Linha "Time A" 3 1 1 1 5 3
+      linhaGolsA = Linha "A" 3 1 1 1 5 3
+      linhaGolsB = Linha "B" 3 1 1 1 4 2
+      paresConsecutivos =
+        zipWith (\a b -> pontosLinha a == pontosLinha b) final (drop 1 final)
+  testar "ate rodada zero retorna lista vazia"
+    (ateRodada 0 partidasDoCampeonato) []
+  testar "ate rodada tres tem trinta partidas"
+    (length (ateRodada 3 partidasDoCampeonato)) 30
+  testar "ate rodada tres limita todas as rodadas"
+    (all (\p -> rodada p <= 3) (ateRodada 3 partidasDoCampeonato)) True
+  testar "ate rodada cinco retorna o campeonato inteiro"
+    (ateRodada 5 partidasDoCampeonato) partidasDoCampeonato
+  testar "campeonato final tem times consecutivos empatados em pontos"
+    (any id paresConsecutivos) True
+  testar "desempate por saldo Athletico-PR Bahia Cruzeiro"
+    (take 3 (map (\l -> (pontosLinha l, vitorias l, saldo l)) final))
+    [(10,3,4),(10,3,2),(10,3,1)]
+  testar "desempate por vitorias Botafogo Atletico-MG"
+    (take 2 (drop 3 (map (\l -> (time l, pontosLinha l, vitorias l)) final)))
+    [("Botafogo",9,3),("Atletico-MG",9,2)]
+  testar "desempate por saldo Atletico-MG Red Bull Bragantino"
+    (map (\l -> (time l, pontosLinha l, vitorias l, saldo l))
+      [final !! 4, final !! 6])
+    [("Atletico-MG",9,2,5),("Red Bull Bragantino",9,2,2)]
+  testar "desempate por nome Atletico-MG Criciuma"
+    (take 2 (drop 4 (map (\l -> (time l, pontosLinha l, vitorias l, saldo l, golsPro l)) final)))
+    [("Atletico-MG",9,2,5,8),("Criciuma",9,2,5,8)]
+  testar "desempate por gols pro criterio Linha A Linha B"
+    (criterio linhaGolsA linhaGolsB) LT
+  testar "desempate por gols pro criterio Linha B Linha A"
+    (criterio linhaGolsB linhaGolsA) GT
   testar "media de gols do campeonato real"
     (mediaGols partidasDoCampeonato) (Just 2.3)
   -- Empate em diferença 4: as três partidas são Athletico-PR 4x0 Cuiaba,
@@ -149,6 +191,18 @@ testesCamada3 = do
      "---  ----  -  -  -  -  -  --\n")
   testar "tabela formatada com duas linhas"
     (tabelaFormatada linhasManuais) tabelaManuaisEsperada
+  testar "ler partida com espacos"
+    (lerPartida 1 "  1 ; Time A ; 2 ; 1 ; Time B  ")
+    (Right partidaTeste)
+  testar "ler partida com CRLF"
+    (lerPartida 1 "  1 ; Time A ; 2 ; 1 ; Time B  \r")
+    (Right partidaTeste)
+  testar "ler campeonato ignora comentario e linha vazia"
+    (lerCampeonato "# c\n\n1;Time A;1;0;Time B\n")
+    (Right [Partida 1 "Time A" 1 0 "Time B"])
+  testar "todos os erros conta comentarios e linhas vazias"
+    (todosOsErros "# c\n\n1;A;x;0;B")
+    [NumeroInvalido "linha 3: 1;A;x;0;B"]
   testar "numero invalido"
     (erroEh numeroInvalido (lerPartida 1 "1;Time A;dois;0;Time B")) True
   testar "placar negativo"
