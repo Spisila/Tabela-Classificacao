@@ -61,20 +61,39 @@ lerPartida numeroLinha texto =
       contexto = "linha " ++ show numeroLinha ++ ": " ++ linha
   in case campos of
     [rodadaTexto, mandanteTexto, golsMandanteTexto, golsVisitanteTexto, visitanteTexto]
-        | any null campos -> Left (CamposInvalidos contexto)
-        | mandanteTexto == visitanteTexto -> Left (MesmoTime contexto)
-        | otherwise -> do
-            rodadaAtual <- lerNumero contexto rodadaTexto
-            golsMandanteAtual <- lerNumero contexto golsMandanteTexto
-            golsVisitanteAtual <- lerNumero contexto golsVisitanteTexto
-            if golsMandanteAtual < 0 || golsVisitanteAtual < 0
-              then Left (PlacarNegativo contexto)
-              else Right (Partida rodadaAtual mandanteTexto
-                    golsMandanteAtual golsVisitanteAtual visitanteTexto)
+      -> do
+        validarCampos campos contexto
+        validarTimes mandanteTexto visitanteTexto contexto
+        rodadaAtual <- lerNumero contexto rodadaTexto
+        golsMandanteAtual <- lerNumero contexto golsMandanteTexto
+        golsVisitanteAtual <- lerNumero contexto golsVisitanteTexto
+        validarPlacar golsMandanteAtual golsVisitanteAtual contexto
+        Right (Partida rodadaAtual mandanteTexto
+          golsMandanteAtual golsVisitanteAtual visitanteTexto)
     _ -> Left (CamposInvalidos contexto)
-  where
-    lerNumero linha campo =
-      maybe (Left (NumeroInvalido linha)) Right (readMaybe campo)
+
+lerNumero :: String -> String -> Either Erro Int
+lerNumero linha campo =
+  maybe (Left (NumeroInvalido linha)) Right (readMaybe campo)
+
+validarCampos :: [String] -> String -> Either Erro ()
+validarCampos campos contexto =
+  case campos of
+    [_, _, _, _, _]
+      | all (not . null) campos -> Right ()
+      | otherwise -> Left (CamposInvalidos contexto)
+    _ -> Left (CamposInvalidos contexto)
+
+validarTimes :: Time -> Time -> String -> Either Erro ()
+validarTimes mandante visitante contexto
+  | mandante == visitante = Left (MesmoTime contexto)
+  | otherwise = Right ()
+
+validarPlacar :: Int -> Int -> String -> Either Erro ()
+validarPlacar golsMandante golsVisitante contexto
+  | golsMandante < 0 || golsVisitante < 0 =
+      Left (PlacarNegativo contexto)
+  | otherwise = Right ()
 
 removerEspacos :: String -> String
 removerEspacos = reverse . dropWhile isSpace . reverse . dropWhile isSpace
